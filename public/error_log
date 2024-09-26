@@ -1,0 +1,11 @@
+[05-Jul-2024 05:12:34 UTC] PHP Warning:  require(/home4/adanijvg/admingoldwin.kinggame.in/vendor/composer/../symfony/deprecation-contracts/function.php): Failed to open stream: No such file or directory in /home4/adanijvg/admingoldwin.kinggame.in/vendor/composer/autoload_real.php on line 41
+[05-Jul-2024 05:12:34 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home4/adanijvg/admingoldwin.kinggame.in/vendor/composer/../symfony/deprecation-contracts/function.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home4/adanijvg/admingoldwin.kinggame.in/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home4/adanijvg/admingoldwin.kinggame.in/vendor/composer/autoload_real.php(45): {closure}('6e3fae29631ef28...', '/home4/adanijvg...')
+#1 /home4/adanijvg/admingoldwin.kinggame.in/vendor/autoload.php(25): ComposerAutoloaderInitbfe12996eeecb6fdc8713a9fd9d431f8::getLoader()
+#2 /home4/adanijvg/admingoldwin.kinggame.in/public/index.php(34): require('/home4/adanijvg...')
+#3 {main}
+  thrown in /home4/adanijvg/admingoldwin.kinggame.in/vendor/composer/autoload_real.php on line 41
+[08-Jul-2024 13:15:23 UTC] PHP Fatal error:  Cannot declare class App\Http\Controllers\Api\ResultController, because the name is already in use in /home4/adanijvg/admingoldwin.kinggame.in/app/Http/Controllers/api/ReportController.php on line 16
+[13-Jul-2024 09:56:22 UTC] PHP Fatal error:  'continue' not in the 'loop' or 'switch' context in /home4/adanijvg/admingoldwin.kinggame.in/app/Http/Controllers/api/CroneController.php on line 34
+[15-Jul-2024 08:05:04 UTC] PHP Fatal error:  Cannot declare class App\Http\Controllers\Api\ReportController, because the name is already in use in /home4/adanijvg/admingoldwin.kinggame.in/app/Http/Controllers/api/PdfController.php on line 16
