@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Validator;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Session;
 
 class AdminController extends Controller
 {
@@ -28,10 +30,13 @@ class AdminController extends Controller
             return redirect()->route('login_page')->with('error',$validator->errors()->first());
         }
         
-        $login = DB::table('admins')->where('id',1)->where('terminal_id',$request->terminal_id)->where('password',$request->password)->first();
+        $login = DB::table('admins')->where('terminal_id',$request->terminal_id)->where('password',$request->password)->first();
         if($login){
             $request->session()->put('id', $login->id);
-            return redirect()->route('admin.dashboard');  
+            Session::put('Auth_id', $login->id);
+            return redirect()->route('admin.dashboard');
+              
+              
         }else{
             return redirect()->route('login_page')->with('error','Invalid Credentials');
         }
@@ -100,25 +105,77 @@ class AdminController extends Controller
                     return redirect()->back()->with('error','Something went wrong!');
                 }          
             }
-        public function createRole()
+   public function createRole()
     {
-        $terminalIds = DB::table('admins')->pluck('terminal_id')->toArray();
-        return view('admin.createrole', compact('terminalIds'));
+        // Fetch all roles from the admins table
+        $authid = Session::get('Auth_id');
+        $roles = DB::table('admins')->select('role_id')->distinct()->get();
+        $creator_id = DB::table('admins')->select('terminal_id')->where('id', $authid)->first(); // Use first() to get a single record
+        $role = DB::table('admins')->select('role_id')->where('id', $authid)->first(); // Use first() to get a single record
+        return view('admin.createrole', compact('authid','roles','role','creator_id'));
     }
 
-    public function getTerminalsByRole(Request $request)
-    {
-        // Validate role_id in the request
-        $request->validate([
-            'role_id' => 'required|integer',
-        ]);
-        // Fetch terminal_ids based on role_id from the admins table
+ public function getTerminalsByRole(Request $request)
+{
+    // Validate the request
+    $request->validate([
+        'role_id' => 'required|integer',
+    ]);
+   
+    $terminals = [];
+
+    // Check role_id and fetch terminals accordingly
+    if ($request->role_id == 2) {
+        // If Stockist is selected, fetch Admin terminals (role_id = 1)
         $terminals = DB::table('admins')
-            ->where('role_id', $request->role_id)
+            ->where('role_id', 1)
             ->pluck('terminal_id');
-        // Return the terminal IDs as JSON response
-        return response()->json($terminals);
+    } elseif ($request->role_id == 3) {
+        // If SubStockist is selected, fetch Stockist terminals (role_id = 2)
+        $terminals = DB::table('admins')
+            ->where('role_id', 2)
+            ->pluck('terminal_id');
+    } elseif ($request->role_id == 4) {
+        // If User is selected, fetch Stockist and SubStockist terminals (role_id = 2, 3)
+        $terminals = DB::table('admins')
+            ->whereIn('role_id', [1, 2, 3])
+            ->pluck('terminal_id');
     }
+
+    return response()->json($terminals);
+}
+
+public function store(Request $request)
+{
+    // Validate the request
+    $request->validate([
+        'terminal_id' => 'required|string|unique:admins,terminal_id', // Ensure terminal_id is unique in the 'admins' table
+        'password' => 'required|string',
+        'role_id' => 'required|integer',
+        'under_role_terminal_id' => 'required|string', // Ye line ab update hui hai
+        'createdby' => 'required|', // Ye line ab update hui hai
+    ]);
+
+    // Get the creator's ID based on under_role_terminal_id
+    $creator_id = DB::table('admins')
+        ->where('terminal_id', $request->under_role_terminal_id)
+        ->value('id'); 
+
+    // Create a new admin entry
+    $admin = new Admin();
+    $admin->terminal_id = $request->terminal_id;
+    $admin->password =$request->password; // Password ko hash karna zaroori hai
+    $admin->role_id = $request->role_id;
+    $admin->created_inside = $creator_id; // Save the selected creator ID
+    $admin->created_by = $request->createdby; // Save the selected creator ID
+  
+    // Save the admin entry
+    $admin->save();
+
+    // Return a success message
+    return redirect()->back()->with('success', 'Role added successfully!');
+}
+
 
 
 }

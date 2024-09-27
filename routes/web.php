@@ -37,9 +37,18 @@ Route::post('/add_money',[AdminController::class,'add_money'])->name('add_money'
 
 // 26/09/2024 
 
-Route::get('/admin/createrole', [AdminController::class, 'createRole'])->name('createRole');
-Route::post('/getterminals', [AdminController::class, 'getTerminalsByRole'])->name('getTerminals');
-Route::post('/createrole', [AdminController::class, 'storeRole'])->name('storeRole');
+
+Route::get('/createrole', [AdminController::class, 'createRole'])->name('createRole');
+
+
+Route::post('/get-terminals', [AdminController::class, 'getTerminalsByRole'])->name('getTerminals');
+
+Route::post('/store', [AdminController::class, 'store'])->name('store');
+
+
+
+
+
 
 
 
