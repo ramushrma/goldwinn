@@ -17,7 +17,6 @@
 
    <!-- Bootstrap CSS -->
    <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}" />
-
    <!-- Site CSS -->
    <link rel="stylesheet" href="{{ asset('style.css') }}" />
    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}" />
@@ -41,7 +40,10 @@
    
    <!-- Include Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-
+ <!--this icon cdn for font awasom icon-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+ <!--this icon cdn for font awasom icon end-->
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <!-- Include Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
@@ -53,6 +55,31 @@
       .dataTables_paginate .paginate_button {
          display: none !important;
       }
+   </style>
+   
+   <style>
+    .dropdown-item.active {
+    background-color: #007bff; /* Change to your desired active background color */
+    color: white; /* Text color for active item */
+}
+
+.dropdown-item {
+color: #000; /* Default text color */
+}
+   </style>
+   <style>
+ .thead-dark th{
+ white-space: nowrap;
+ }
+ .tbody td{
+     text-align:center;
+ }
+ .tdata td{
+ white-space: nowrap;
+ }
+ .tbody td{
+     text-align:center;
+ }
    </style>
 </head>
 
@@ -94,5 +121,6 @@
 
    <script src="{{ asset('js/custom.js') }}"></script>
    <script src="{{ asset('js/chart_custom_style1.js') }}"></script>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

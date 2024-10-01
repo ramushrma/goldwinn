@@ -9,60 +9,64 @@
 <div class="full_container mt-4">  
     <div class="card p-4">
         <div class="text-center">
-            <h3 class="text-primary mt-4">Add Roles</h3>
+           
+            <h3 class="text-primary mt-4">Edit Role</h3>
         </div>
         <div class="row mt-4">
             <div class="col-sm-6">
-                <form action="{{ route('store') }}" method="post">
-                    @csrf
+                    <form action="{{ route('admins.userupdate', $roleToEdit->id) }}" method="POST">
+                          @csrf
+                        @method('PUT')
                     <div class="form-group">
                         <label for="name">KeyName</label>
-                        <input type="text" class="form-control" id="terminal_id" name="terminal_id" value="{{ $creator_id->terminal_id ?? '' }}" required>
+                        <input type="text" class="form-control" id="terminal_id" name="terminal_id" value="{{ old('terminal_id', $roleToEdit->terminal_id) }}" required>
                     </div>
                     @if($errors->has('terminal_id'))
                         <div class="error text-danger">{{ $errors->first('terminal_id') }}</div>
                     @endif
+
                     <label for="role">Role Select</label>
                     <select class="form-control" name="role_id" id="role_id">
                         <option selected value="">Choose...</option>
                         @if($role->role_id == 1) <!-- Admin -->
-                            <option value="2">Stockist</option>
-                            <option value="3">SubStockist</option>
-                            <option value="4">User</option>
+                            <option value="2" {{old('role_id',$roleToEdit->role_id ) == 2 ? 'selected' : ''}}>Stockist</option>
+                            <option value="3"  {{old('role_id',$roleToEdit->role_id ) == 3 ? 'selected' : ''}}>SubStockist</option>
+                            <option value="4"  {{old('role_id',$roleToEdit->role_id ) == 4 ? 'selected' : ''}}>User</option>
                         @elseif($role->role_id == 2) <!-- Stockist -->
-                            <option value="3">SubStockist</option>
-                            <option value="4">User</option>
+                            <option value="3"  {{old('role_id',$roleToEdit->role_id ) == 3 ? 'selected' : ''}} >SubStockist</option>
+                            <option value="4"  {{old('role_id',$roleToEdit->role_id ) == 4 ? 'selected' : ''}} >User</option>
                         @elseif($role->role_id == 3 || $role->role_id == 4) <!-- SubStockist or User -->
-                            <option value="4">User</option>
+                            <option value="4" @if($roleToEdit->role_id == 4) selected @endif>User</option>
                         @endif
                     </select>
                     @if($errors->has('role_id'))
-                        <div class="error  text-danger">{{ $errors->first('role_id') }}</div>
+                        <div class="error text-danger">{{ $errors->first('role_id') }}</div>
                     @endif
                 </div>
 
                 <div class="col-sm-6">
                    <div class="form-group">
-    <label for="password">Password</label>
-    <div class="input-group">
-        <input type="password" class="form-control" id="password" name="password" required>
-        <div class="input-group-append">
-            <span class="input-group-text" onclick="togglePasswordVisibility()">
-                <i id="toggleIcon" class="fa fa-eye"></i>
-            </span>
-        </div>
-    </div>
-    <input type="hidden" class="form-control" id="hidden" name="createdby" value="{{$authid ?? 0}}" required>
-</div>
-
+                        <label for="password">Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" value="{{ old('password', $roleToEdit->password) }}">
+                            <div class="input-group-append">
+                                <span class="input-group-text" onclick="togglePasswordVisibility()">
+                                    <i id="toggleIcon" class="fa fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control" id="hidden" name="createdby" value="{{ $authid ?? 0 }}" required>
+                    </div>
                     @if($errors->has('password'))
-                        <div class="error  text-danger">{{ $errors->first('password') }}</div>
+                        <div class="error text-danger">{{ $errors->first('password') }}</div>
                     @endif
-                    <!-- Inside your form, the relevant part will look like this -->
-                    <div class="form-group">
+
+                      <div class="form-group">
+                           
                         <label for="under_role">Select Under Role</label>
                         <select class="form-control" name="under_role_terminal_id" id="under_role_terminal_id" value="xyz">
-                            <option selected value="">Choose KeyNames</option>
+                         <option selected value="">Choose KeyNames</option>
+                            <option value="{{$creator_id->terminal_id}}" {{ old('created_inside', $creator_id->terminal_id) == $creator_id->terminal_id ? 'selected' : '' }}>{{ $creator_id->terminal_id ?? 456123}}</option>
                             @if($role->role_id == 2) <!-- Stockist -->
                                 <!-- Stockist can see a list of all SubStockists when creating a User -->
                             @endif
@@ -78,14 +82,14 @@
             </div>
             <div class="text-center">
                     <button type="reset" class="btn btn-warning">Reset</button>
-                    <button type="submit" class="btn btn-primary">Add Role</button> 
+                    <button type="submit" class="btn btn-primary">Update Role</button> 
             </div>
              </form> 
         </div>
     </div>
 </div>
 
-<!-- Add the AJAX script to dynamically populate the terminal list -->
+<!-- Same script for dynamic population and password toggle -->
 <script>
 $(document).ready(function() {
     $('#under_role_terminal_id').select2({
@@ -96,24 +100,22 @@ $(document).ready(function() {
     $('#role_id').change(function() {
         var roleId = $(this).val();
         var loggedInRoleId = "{{ $role->role_id }}";
-        var auth = "{{$authid}}";  // Auth ID ko bhejne ke liye
+        var auth = "{{ $authid }}";
 
-        $('#under_role_terminal_id').empty().prop('disabled', false); // Allow selecting
+        $('#under_role_terminal_id').empty().prop('disabled', false);
 
         if (roleId) {
             if (roleId == 3 && loggedInRoleId == 2) {
-                // Stockist creating SubStockist, show their terminal_id without pre-selection
                 var roleCreatorId = "{{ $creator_id->terminal_id }}"; 
                 $('#under_role_terminal_id').append('<option value="' + roleCreatorId + '">' + roleCreatorId + '</option>');
-            } else if ((roleId == 4 && loggedInRoleId == 2) || (roleId == 4 && loggedInRoleId == 1) || (roleId == 3 && loggedInRoleId == 1)) {
-                // Stockist creating User, show SubStockist terminals for selection
+            } else {
                 $.ajax({
                     url: '{{ route("getTerminals") }}',
                     type: 'POST',
                     data: {
                         role_id: roleId,
                         logged_in_role_id: loggedInRoleId,
-                        auth: auth,  // Auth ID yahan bhej rahe hain
+                        auth: auth,
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(data) {
@@ -127,33 +129,11 @@ $(document).ready(function() {
                         }
                     }
                 });
-            } else {
-                $.ajax({
-                    url: '{{ route("getTerminals") }}',
-                    type: 'POST',
-                    data: {
-                        role_id: roleId,
-                        logged_in_role_id: loggedInRoleId,
-                        auth: auth,  // Auth ID yahan bhej rahe hain
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(data) {
-                        if (data.length > 0) {
-                            $.each(data, function(index, value) {
-                                $('#under_role_terminal_id').append('<option value="' + value + '">' + value + '</option>');
-                            });
-                        } else {
-                            $('#under_role_terminal_id').append('<option>No Terminals Available</option>');
-                        }
-                    }
-                });
             }
         }
     });
 });
-</script>
-<script>
-    function togglePasswordVisibility() {
+function togglePasswordVisibility() {
     var passwordField = document.getElementById('password');
     var toggleIcon = document.getElementById('toggleIcon');
     
@@ -168,8 +148,8 @@ $(document).ready(function() {
     }
 }
 </script>
+
 @endsection
 
 @section('scripts')
-
 @endsection

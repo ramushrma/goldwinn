@@ -28,7 +28,8 @@
       <link rel="stylesheet" href="css/perfect-scrollbar.css" />
       <!-- custom css -->
       <link rel="stylesheet" href="css/custom.css" />
-      
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
       <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
@@ -66,10 +67,13 @@
                               <label class="label_field">Email Address</label>
                               <input type="text" name="terminal_id" placeholder="Terminal Id" />
                            </div>
-                           <div class="field">
+                           <div class="field" style="position: relative;">
                               <label class="label_field">Password</label>
-                              <input type="password" name="password" placeholder="Password" />
-                           </div>
+                              <input type="password" name="password" placeholder="Password" value="{{ old('password') }}" style="padding-right: 40px;" />
+                              <span id="togglePassword" style="position: absolute; right: 10px; top: 35%; cursor: pointer;">
+                                  <i class="fas fa-eye" id="eyeIcon"></i> <!-- Font Awesome Eye Icon -->
+                              </span>
+                          </div>
                            <div class="field margin_0">
                               <label class="label_field hidden">hidden label</label>
                               <button class="main_bt">Sign In</button>
@@ -82,6 +86,19 @@
          </div>
       </div>
 <!-- jQuery -->
+<script>
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.querySelector('input[name="password"]');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    togglePassword.addEventListener('click', function () {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        eyeIcon.classList.toggle('fa-eye');
+        eyeIcon.classList.toggle('fa-eye-slash');
+    });
+</script>
+
       <script src="js/jquery.min.js"></script>
       <script src="js/popper.min.js"></script>
       <script src="js/bootstrap.min.js"></script>

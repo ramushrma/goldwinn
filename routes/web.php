@@ -40,10 +40,29 @@ Route::post('/add_money',[AdminController::class,'add_money'])->name('add_money'
 
 Route::get('/createrole', [AdminController::class, 'createRole'])->name('createRole');
 
-
 Route::post('/get-terminals', [AdminController::class, 'getTerminalsByRole'])->name('getTerminals');
 
 Route::post('/store', [AdminController::class, 'store'])->name('store');
+route::get('{id}/edit', [AdminController::class, 'editRole']);
+Route::get('/stokist', [AdminController::class, 'stokistlist'])->name('stokistlist');
+
+
+Route::put('/admins/{id}/status', [AdminController::class, 'updateStatus'])->name('admins.updateStatus');
+Route::put('/admins/{id}/user', [AdminController::class, 'update'])->name('admins.userupdate');
+
+
+Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
+
+Route::post('/wallet/{id}', [AdminController::class, 'addwallet'])->name('wallet');
+Route::get('/transaction-history/{id}', [AdminController::class, 'history'])->name('transaction.history');
+
+
+
+
+
+
+
+
 
 
 
