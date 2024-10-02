@@ -15,44 +15,91 @@
                     </div>
                   <div class="float-right">
                      <div class="form-group" style="width: 100%;"> <!-- width ko apni pasand ke hisaab se adjust kar sakte ho -->
-                         <form method="GET" action="{{ route('stokistlist') }}" id="roleFilterForm">
-                             <div class="form-row d-flex">
-                                 <!-- Select Role Dropdown -->
-                                 <div class="col">
-                                     <select class="form-control" id="roleSelect" name="role_id" onchange="document.getElementById('roleFilterForm').submit()">
-                                       <option value="" {{ $role_id === null ? 'selected' : '' }}>All Users</option>
-                                         @if($roles->role_id == 1)
-                                           <option value="2" {{ $role_id == 2 ? 'selected' : '' }}>Stockist</option>
-                                           <option value="3" {{ $role_id == 3 ? 'selected' : '' }}>Sub Stockist</option>
-                                           <option value="4" {{ $role_id == 4 ? 'selected' : '' }}>Users</option>
-                                         @elseif($roles->role_id == 2)
-                                           <option value="3" {{ $role_id == 3 ? 'selected' : '' }}>Sub Stockist</option>
-                                           <option value="4" {{ $role_id == 4 ? 'selected' : '' }}>Users</option>
-                                         @elseif($roles->role_id == 3)
-                                           <option value="4" {{ $role_id == 4 ? 'selected' : '' }}>Users</option>
-                                         @endif
-                                   </select>
-                 
-                                 </div>
-                 
-                                 <!-- Search Terminal ID Input -->
-                                 <div class="col">
-                                     <input type="text" name="search" class="form-control" placeholder="Search KeyName..." value="{{ request('search') }}" />
-                                 </div>
-                 
-                                 <!-- Search Button -->
-                                 <div class="col-auto">
-                                     <button type="submit" class="btn btn-primary">Search</button>
-                                 </div>
-                 
-                                 <!-- Reset Button -->
-                                  @if (request('role_id') || request('search'))
-                                    <div class="col-auto">
-                                     <a href="{{ route('stokistlist') }}" class="btn btn-secondary">Reset</a>
-                                 </div>
-                                  @endif
-                             </div>
-                         </form>
+<form method="GET" action="{{ route('stokistlist') }}" id="roleFilterForm">
+    <div class="form-row d-flex">
+        <!-- Stockist Dropdown -->
+        <div class="col">
+            <select class="form-control" id="stockistSelect" name="stockist_id" onchange="fetchSubStockists()">
+                <option value="">Select Stockist</option>
+                @foreach($admins as $stockist)
+                    <option value="{{ $stockist->id }}" {{ request('stockist_id') == $stockist->id ? 'selected' : '' }}>
+                        {{ $stockist->terminal_id }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Sub Stockist Dropdown -->
+        <div class="col">
+            <select class="form-control" id="subStockistSelect" name="sub_stockist_id" onchange="fetchUsers()">
+                <option value="">Select Sub Stockist</option>
+                @foreach($admins as $subStockist)
+                    <option value="{{ $subStockist->id }}" {{ request('sub_stockist_id') == $subStockist->id ? 'selected' : '' }}>
+                        {{ $subStockist->terminal_id }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- User Dropdown -->
+        <div class="col">
+            <select class="form-control" id="userSelect" name="user_id">
+                <option value="">Select User</option>
+                @foreach($admins as $user)
+                    <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                        {{ $user->terminal_id }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Search Button -->
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+
+        <!-- Reset Button -->
+        @if (request('stockist_id') || request('sub_stockist_id') || request('user_id'))
+            <div class="col-auto">
+                <a href="{{ route('stokistlist') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        @endif
+    </div>
+</form>
+
+
+
+
+<script>
+    function fetchSubStockists() {
+        let stockistId = document.getElementById('stockistSelect').value;
+        // AJAX call to fetch sub stockists based on selected stockist
+        fetch(`/api/sub-stockists/${stockistId}`)
+            .then(response => response.json())
+            .then(data => {
+                let subStockistSelect = document.getElementById('subStockistSelect');
+                subStockistSelect.innerHTML = '<option value="">Select Sub Stockist</option>'; // Reset options
+                data.forEach(subStockist => {
+                    subStockistSelect.innerHTML += `<option value="${subStockist.id}">${subStockist.terminal_id}</option>`;
+                });
+            });
+    }
+
+    function fetchUsers() {
+        let subStockistId = document.getElementById('subStockistSelect').value;
+        // AJAX call to fetch users based on selected sub stockist
+        fetch(`/api/users/${subStockistId}`)
+            .then(response => response.json())
+            .then(data => {
+                let userSelect = document.getElementById('userSelect');
+                userSelect.innerHTML = '<option value="">Select User</option>'; // Reset options
+                data.forEach(user => {
+                    userSelect.innerHTML += `<option value="${user.id}">${user.terminal_id}</option>`;
+                });
+            });
+    }
+</script>
+
                      </div>
                 </div>
                 </div>
@@ -266,9 +313,10 @@
             </div>
         </div>
     </div>
-<div class="d-flex float-right mt-3"> 
-    {{ $admins->appends(['role_id' => $role_id])->links('admin.custom') }} 
-</div>
+
+
+
+
 </div>
 @endsection
 
