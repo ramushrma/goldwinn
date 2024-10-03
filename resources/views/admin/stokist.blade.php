@@ -12,16 +12,18 @@
                 <div class="full graph_head">
                     <div class="heading1 margin_0">
                         <h2>Users</h2>
+                        {{ $sub_stockist_id }}
+                         {{ $user_id }}
                     </div>
                   <div class="float-right">
                      <div class="form-group" style="width: 100%;"> <!-- width ko apni pasand ke hisaab se adjust kar sakte ho -->
-<form method="GET" action="{{ route('stokistlist') }}" id="roleFilterForm">
+                     <form method="GET" action="{{ route('stokistlist') }}" id="roleFilterForm">
     <div class="form-row d-flex">
         <!-- Stockist Dropdown -->
         <div class="col">
-            <select class="form-control" id="stockistSelect" name="stockist_id" onchange="fetchSubStockists()">
+            <select class="form-control" id="stockistSelect" name="stockist_id" onchange="submitForm(); fetchSubStockists()">
                 <option value="">Select Stockist</option>
-                @foreach($admins as $stockist)
+                @foreach($role_id2 as $stockist)
                     <option value="{{ $stockist->id }}" {{ request('stockist_id') == $stockist->id ? 'selected' : '' }}>
                         {{ $stockist->terminal_id }}
                     </option>
@@ -31,31 +33,34 @@
 
         <!-- Sub Stockist Dropdown -->
         <div class="col">
-            <select class="form-control" id="subStockistSelect" name="sub_stockist_id" onchange="fetchUsers()">
+            <select class="form-control" id="subStockistSelect" name="sub_stockist_id" onchange="submitForm(); fetchUsers()">
                 <option value="">Select Sub Stockist</option>
-                @foreach($admins as $subStockist)
-                    <option value="{{ $subStockist->id }}" {{ request('sub_stockist_id') == $subStockist->id ? 'selected' : '' }}>
-                        {{ $subStockist->terminal_id }}
-                    </option>
-                @endforeach
+                @if(request('stockist_id')) <!-- Only show if a stockist is selected -->
+                    @foreach($admins as $subStockist)
+                        @if($subStockist->inside_stockist == request('stockist_id') && $subStockist->role_id == 3) <!-- Match with selected stockist and role_id is 3 -->
+                            <option value="{{ $subStockist->id }}" {{ request('sub_stockist_id') == $subStockist->id ? 'selected' : '' }}>
+                                {{ $subStockist->terminal_id }}
+                            </option>
+                        @endif
+                    @endforeach
+                @endif
             </select>
         </div>
 
         <!-- User Dropdown -->
         <div class="col">
-            <select class="form-control" id="userSelect" name="user_id">
+            <select class="form-control" id="userSelect" name="user_id" onchange="submitForm()">
                 <option value="">Select User</option>
-                @foreach($admins as $user)
-                    <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
-                        {{ $user->terminal_id }}
-                    </option>
-                @endforeach
+                @if(request('sub_stockist_id')) <!-- Only show if a sub stockist is selected -->
+                    @foreach($admins as $user)
+                        @if($user->inside_substockist == request('sub_stockist_id')) <!-- Match with selected sub stockist -->
+                            <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                                {{ $user->terminal_id }}
+                            </option>
+                        @endif
+                    @endforeach
+                @endif
             </select>
-        </div>
-
-        <!-- Search Button -->
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Search</button>
         </div>
 
         <!-- Reset Button -->
@@ -67,40 +72,65 @@
     </div>
 </form>
 
-
-
-
-<script>
+             <script>
+    function submitForm() {
+        document.getElementById('roleFilterForm').submit();
+    }
     function fetchSubStockists() {
         let stockistId = document.getElementById('stockistSelect').value;
-        // AJAX call to fetch sub stockists based on selected stockist
         fetch(`/api/sub-stockists/${stockistId}`)
             .then(response => response.json())
             .then(data => {
                 let subStockistSelect = document.getElementById('subStockistSelect');
-                subStockistSelect.innerHTML = '<option value="">Select Sub Stockist</option>'; // Reset options
+                subStockistSelect.innerHTML = '<option value="">Select Sub Stockist</option>';
                 data.forEach(subStockist => {
                     subStockistSelect.innerHTML += `<option value="${subStockist.id}">${subStockist.terminal_id}</option>`;
                 });
+
+                // Reinitialize select2 if you're using it
+                $('#subStockistSelect').select2(); 
+                
+                // Set the previously selected sub-stockist if it exists
+                let oldSubStockistId = "{{ old('sub_stockist_id', request('sub_stockist_id')) }}";
+                if (oldSubStockistId) {
+                    subStockistSelect.value = oldSubStockistId;
+                }
             });
     }
 
     function fetchUsers() {
         let subStockistId = document.getElementById('subStockistSelect').value;
-        // AJAX call to fetch users based on selected sub stockist
         fetch(`/api/users/${subStockistId}`)
             .then(response => response.json())
             .then(data => {
                 let userSelect = document.getElementById('userSelect');
-                userSelect.innerHTML = '<option value="">Select User</option>'; // Reset options
+                userSelect.innerHTML = '<option value="">Select User</option>';
                 data.forEach(user => {
                     userSelect.innerHTML += `<option value="${user.id}">${user.terminal_id}</option>`;
                 });
+
+                // Reinitialize select2 if you're using it
+                $('#userSelect').select2(); 
+
+                // Set the previously selected user if it exists
+                let oldUserId = "{{ old('user_id', request('user_id')) }}";
+                if (oldUserId) {
+                    userSelect.value = oldUserId;
+                }
             });
     }
+
+    $(document).ready(function() {
+        $('#stockistSelect, #subStockistSelect, #userSelect').select2({
+            placeholder: 'Select',
+            allowClear: true
+        });
+    });
 </script>
 
-                     </div>
+
+
+                </div>
                 </div>
                 </div>
                 <div class="table_section padding_infor_info">

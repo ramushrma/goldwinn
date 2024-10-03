@@ -123,37 +123,27 @@ public function createRole()
 
 public function getTerminalsByRole(Request $request)
 {
-   
-    // Request ki validation karte hain
     $request->validate([
-        'role_id' => 'required|integer', // Role ID ki zaroorat hai
+        'role_id' => 'required|integer', 
         'logged_in_role_id' => 'required|integer', 
         'auth' => 'required|string',
-          // Logged-in user ki Role ID ki zaroorat hai
     ]);
      $created_by = $request->input('auth');
-
-    $terminals = []; // Terminals ka array initialize karte hain
-
-    // Check karte hain agar logged-in user Stockist hai aur SubStockist create kar raha hai
+    $terminals = []; 
     if ($request->logged_in_role_id == 2 && $request->role_id == 3) {
-        // Sirf logged-in Stockist ka terminal_id fetch karte hain
         $terminals = DB::table('admins')
-            ->where('id', auth()->user()->id)  // Logged-in Stockist ka ID lete hain
-            ->pluck('terminal_id'); // Terminal ID lete hain
+            ->where('id', auth()->user()->id) 
+            ->pluck('terminal_id'); 
     } 
-    // Agar logged-in Stockist User create kar raha hai, toh SubStockist terminals fetch karte hain
     elseif ($request->logged_in_role_id == 2 && $request->role_id == 4) {
-        // Saare SubStockist terminals fetch karte hain
                $terminalsfirst = DB::table('admins')
-              ->where('created_by', $created_by) // Jo created_by value hai usko match karna
-              ->where('role_id', 3) // Sirf un records ko fetch karna jinka role_id 3 hai
+              ->where('created_by', $created_by) 
+              ->where('role_id', 3) 
               ->select('terminal_id');
           // Dusri query
           $terminalssecond = DB::table('admins')
               ->where('id', $created_by) // Jo id hai usko match karna
               ->select('terminal_id');
-          // Dono queries ko join karna
           $terminals = $terminalsfirst->union($terminalssecond)->pluck('terminal_id');
        }
         elseif ($request->logged_in_role_id == 3 && $request->role_id == 4){
@@ -161,35 +151,21 @@ public function getTerminalsByRole(Request $request)
               ->where('id', $created_by) 
               ->pluck('terminal_id');
        }
-    // Agar logged-in user Admin hai
     elseif ($request->logged_in_role_id == 1) {
-        // Admin ki logic
         if ($request->role_id == 2) {
-            // Agar Stockist select kiya gaya hai, toh Admin terminals fetch karte hain
             $terminals = DB::table('admins')
                 ->where('role_id', 1)
                 ->pluck('terminal_id');
         } elseif ($request->role_id == 3) {
-            // Agar SubStockist select kiya gaya hai, toh Stockist terminals fetch karte hain
-            $terminalsfirst = DB::table('admins')
+            $terminals = DB::table('admins')
                 ->where('role_id', 2)
-                ->select('terminal_id');
-                $terminalssecond = DB::table('admins')
-                ->where('role_id', 1)
-                ->select('terminal_id');
-               $terminals = $terminalsfirst->union($terminalssecond)->pluck('terminal_id'); 
+                ->pluck('terminal_id');
         } elseif ($request->role_id == 4) {
-            // Agar User select kiya gaya hai, toh Stockist aur SubStockist terminals fetch karte hain
-            $terminalsfirst = DB::table('admins')
+            $terminals = DB::table('admins')
                 ->where('role_id', 3)
-                ->select('terminal_id');
-                $terminalssecond = DB::table('admins')
-                ->where('role_id', 1)
-                ->select('terminal_id');
-               $terminals = $terminalsfirst->union($terminalssecond)->pluck('terminal_id'); 
+                ->pluck('terminal_id');
         }
     }
-
     return response()->json($terminals); // Terminals ko JSON response ke through bhejte hain
 }
 
@@ -205,34 +181,36 @@ public function store(Request $request)
         'under_role_terminal_id' => 'required|string', // Ye line ab update hui hai, selected terminal id
         'createdby' => 'required|', // Ye line ab update hui hai,login prson id
     ]);
-
-    // Get the creator's ID based on under_role_terminal_id
-    // $creator_id = DB::table('admins')
-    //     ->where('terminal_id', $request->under_role_terminal_id)
-    //     ->value('id'); 
     
         $terminalid = $request->under_role_terminal_id;
         $data = DB::table('admins')->where('terminal_id', $terminalid)->first();
-        $id = $data->id;
+        $ids = $data->id;
         $role_id = $data->role_id;
+        $insidestokist =  $data->inside_stockist;
+        $insidesubstokist =$data->inside_substockist;
+        
         if($role_id == 2){            // yaha uski role_id chech ho rhai hai jiske andar create kiya ja raha hai 
-            $insidestokist = $id;
-            $insidesubstokist = "";
+            $insidestokist = $ids;
+            $insidesubstokist =null;
         }
         elseif($role_id == 3)
         {
-            $insidestokist = "";
-            $insidesubstokist = "$id";
+            $insidestokist = $insidestokist;
+            $insidesubstokist =$ids;
+        }else{
+            $insidestokist= null;
+            $insidesubstokist = null;
         }
         
-        dd($key);
+       // dd($key);
     // Create a new admin entry
     $admin = new Admin();
     $admin->terminal_id = $request->terminal_id;
     $admin->password =$request->password; 
     $admin->role_id = $request->role_id;
-    $admin->created_inside = $creator_id;
     $admin->created_by = $request->createdby;
+    $admin->inside_stockist = $insidestokist;
+    $admin->inside_substockist = $insidesubstokist;
   
     // Save the admin entry
     $admin->save();
@@ -277,49 +255,55 @@ public function editRole($id)
     return redirect()->back()->with('success', 'Role updated successfully!');
    }  
    
-   
-   
      public function stokistlist(Request $request) {
+         
     $authid = Session::get('Auth_id');
     $roles = DB::table('admins')->where('id',$authid)->value('role_id');
- 
+    $role_id2 = DB::table('admins')->where('role_id',2)->get();
     $query = DB::table('admins');
-    if($roles!=1){
-        $query->where('created_inside',$authid)->where('role_id','!=',4);
-    }
+    $searchstokist = DB::table('admins');
     
-    $admins = $query->paginate();
-      return view('admin.stokist')->with('admins',$admins)->with('roles',$roles)->with('authid',$authid);
-      
-      
-      
-      
-      
-      
-      
-    //     if ($roles->role_id == 1) {
-    //     $stockistId = $request->input('stockist_id');
-    //     $subStockistId = $request->input('sub_stockist_id');
-    //     $userId = $request->input('user_id');
-       
-    //     if ($stockistId) {
-    //         $query->where('created_inside', $stockistId); // Check created_inside for stockist
-    //     }
+    $stockist_id = $request->stockist_id;
+    $sub_stockist_id = $request->sub_stockist_id;
+    $user_id = $request->user_id;
+   
+    if ($roles == 2) {
+     $query->where('inside_stockist', $authid)->get();
+    } elseif ($roles == 3) {
+        $query->where('inside_substockist', $authid)->get();
+    } elseif($roles == 1){
         
-    //     if ($subStockistId) {
-    //         $query->where('created_inside', $subStockistId); // Check created_inside for sub stockist
-    //     }
-        
-    //     if ($userId) {
-    //         $query->where('id', $userId); // Filter by user id
-    //     }
-    // }
+        if($stockist_id){
+            
+             $query->where('inside_stockist', $stockist_id)->get();
+            // $searchstokist->where('inside_stockist',$stockist_id)->where('role_id',3)->get();
+             
+             if($sub_stockist_id){
+                
+                 $query->where('inside_substockist', $sub_stockist_id)->get();
+             }
+             if($user_id)
+             {
+                  $query->where('id', $user_id)->get();
+             }
+        }
+           else{
+               $query->get();
+           }
+      }
+      //dd($searchstokist);
+      $admins = $query->paginate();
+     return view('admin.stokist')
+   ->with('admins', $admins)
+   ->with('roles', $roles)
+   ->with('role_id2', $role_id2)
+   ->with('authid', $authid)
+   ->with('stockist_id', $request->stockist_id)
+   ->with('sub_stockist_id', $request->sub_stockist_id)
+   ->with('user_id', $request->user_id);
 
-    
 }
 
-     
-           
 public function updateStatus(Request $request, $id)
 {
     // Validate the incoming request
@@ -341,7 +325,8 @@ public function destroy($id)
     $admin->delete();
 
     return redirect()->back()->with('message', 'Admin deleted successfully!');
-}  
+} 
+
 public function addwallet(Request $request, $id)
 {
     // Validate the request
@@ -400,7 +385,6 @@ public function addwallet(Request $request, $id)
         ->select('admins.id as admin_id', 'admins.role_id as role','admins.terminal_id as terminal_id', 'TransactionHistory.id as transaction_id', 'TransactionHistory.amount as transamount','TransactionHistory.result1add2deduct as description','TransactionHistory.created_at as transtime') // Use aliases to avoid conflicts
         ->where('admins.id', $id) // Filter by admin ID
         ->get();
-       
         return view('admin.transactions', compact('transactions'));
     }
 }

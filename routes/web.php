@@ -51,6 +51,9 @@ Route::get('/transaction-history/{id}', [AdminController::class, 'history'])->na
 
 
 
+Route::get('/stokistlist', [AdminController::class, 'stokistlist'])->name('stokistlist');
+Route::get('/api/sub-stockists/{id}', [AdminController::class, 'fetchSubStockists']);
+Route::get('/api/users/{id}', [AdminController::class, 'fetchUsers']);
 
 
 
