@@ -46,14 +46,19 @@ Route::any('/stokist', [AdminController::class, 'stokistlist'])->name('stokistli
 Route::put('/admins/{id}/status', [AdminController::class, 'updateStatus'])->name('admins.updateStatus');
 Route::put('/admins/{id}/user', [AdminController::class, 'update'])->name('admins.userupdate');
 Route::delete('/admins/{id}', [AdminController::class, 'destroy'])->name('admins.destroy');
-Route::post('/wallet/{id}', [AdminController::class, 'addwallet'])->name('wallet');
-Route::get('/transaction-history/{id}', [AdminController::class, 'history'])->name('transaction.history');
+Route::post('/wallet/{id}', [AdminController::class, 'addwallet'])->name('admins.addwallet');
+Route::get('/transaction/history/{id}', [AdminController::class, 'history'])->name('transaction.history');
+
+
+Route::get('/getSubstockists/{stockistId}', [AdminController::class, 'getSubstockists']);
+Route::get('/getUsers/{substockistId}', [AdminController::class, 'getUsers']);
+Route::get('/getUserData/{userId}', [AdminController::class, 'getUserData']);
+Route::get('/getTableData', [AdminController::class, 'getTableData']);
+// web.php
+Route::get('/getUserByTerminal/{terminalId}', [AdminController::class, 'getUserByTerminal']);
 
 
 
-Route::get('/stokistlist', [AdminController::class, 'stokistlist'])->name('stokistlist');
-Route::get('/api/sub-stockists/{id}', [AdminController::class, 'fetchSubStockists']);
-Route::get('/api/users/{id}', [AdminController::class, 'fetchUsers']);
 
 
 

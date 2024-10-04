@@ -17,16 +17,14 @@ class AdminController extends Controller
     public function login_page(){
         return view('admin.login');
     }
-    
     public function login(Request $request){
-         $validator = Validator::make($request->all(), [
+            $validator = Validator::make($request->all(), [
             'terminal_id' => 'required',
             'password' => 'required'
         ]);
 		   
-        $validator->stopOnFirstFailure();
-
-        if ($validator->fails()) {
+            $validator->stopOnFirstFailure();
+        if($validator->fails()) {
             return redirect()->route('login_page')->with('error',$validator->errors()->first());
         }
        
@@ -35,9 +33,9 @@ class AdminController extends Controller
            ->where('password', $request->password)
            ->first();
        
-       if ($login) {
-           $request->session()->put('id', $login->id);
-           $request->session()->put('role_id', $login->role_id); // Add this line to store role_id
+       if($login){ 
+          $request->session()->put('id', $login->id);
+           $request->session()->put('role_id', $login->role_id); 
            Session::put('Auth_id', $login->id);
            $role = Session::get('role_id');
            return redirect()->route('admin.dashboard');
@@ -47,12 +45,9 @@ class AdminController extends Controller
             return redirect()->route('login_page')->with('error','Invalid Credentials');
         }
     }
-    
         public function dashboard(){
         return view('admin.index');
     }
-    
-    
      public function logout(Request $request){
          $request->session()->forget('id');
         return redirect()->route('login_page');
@@ -68,7 +63,7 @@ class AdminController extends Controller
          }
          
     public function update_password(Request $request){
-          $validator = Validator::make($request->all(), [
+             $validator = Validator::make($request->all(), [
             'terminal_id' => 'required',
             'password' => 'required',
             'new_password'=>'required'
@@ -91,7 +86,6 @@ class AdminController extends Controller
             return redirect()->route('admin.password')->with('error','Invalid Credentials');
         }
          }
-         
          
         public function wallet(){
             $wallet = DB::table('admins')->where('id',1)->value('wallet');
@@ -121,8 +115,8 @@ public function createRole()
         return view('admin.createrole', compact('authid','roles','role','creator_id'));
     }
 
-public function getTerminalsByRole(Request $request)
-{
+  public function getTerminalsByRole(Request $request)
+  {
     $request->validate([
         'role_id' => 'required|integer', 
         'logged_in_role_id' => 'required|integer', 
@@ -168,7 +162,6 @@ public function getTerminalsByRole(Request $request)
     }
     return response()->json($terminals); // Terminals ko JSON response ke through bhejte hain
 }
-
 
 public function store(Request $request)
 {
@@ -224,14 +217,37 @@ public function editRole($id)
     // Role ko fetch karne ke liye $id se related data laate hain
     $authid = Session::get('Auth_id');
     $roles = DB::table('admins')->select('role_id')->distinct()->get();
-    $creator_id = DB::table('admins')->select('terminal_id')->where('id', $authid)->first(); // Terminal ID
-    $role = DB::table('admins')->select('role_id')->where('id', $authid)->first(); // Logged-in role
-    // Existing role ka data
+    $creator_ids = DB::table('admins')->select('terminal_id')->where('id', $authid)->first();
+    
+    $role = DB::table('admins')->select('role_id')->where('id', $authid)->first();
+
     $roleToEdit = DB::table('admins')->where('id', $id)->first();
     $created_inside = $roleToEdit->created_inside;
     $creator_id = DB::table('admins')->select('terminal_id')->where('id', $created_inside)->first();
-    return view('admin.editusers', compact('roleToEdit', 'authid', 'roles', 'role', 'creator_id'));
-   }
+    
+    if($roleToEdit->role_id ==3)
+    {
+         $inside_stockistid = DB::table('admins')->select('inside_stockist')->where('id', $id)->first();
+         $inside_stockist_value = $inside_stockistid->inside_stockist;
+         $insideid = DB::table('admins')->select('terminal_id')->where('id', $inside_stockist_value)->first();
+         
+        
+    }elseif($roleToEdit->role_id == 4)
+    {
+        $inside_stockistid = DB::table('admins')->select('inside_substockist')->where('id', $id)->first();
+        $inside_substockist_value = $inside_stockistid->inside_substockist;
+        $insideid = DB::table('admins')->select('terminal_id')->where('id', $inside_substockist_value)->first();
+    }else{
+         $insideid = DB::table('admins')->select('terminal_id')->where('id', 1)->first();
+    }
+    
+    return view('admin.editusers')
+    ->with('roleToEdit', $roleToEdit)
+    ->with('authid', $authid)
+    ->with('roles', $roles)
+    ->with('role', $role)
+    ->with('insideid',$insideid);
+}
 
    public function update(Request $request, $id)
    {
@@ -254,55 +270,73 @@ public function editRole($id)
     $admin->save();
     return redirect()->back()->with('success', 'Role updated successfully!');
    }  
-   
-     public function stokistlist(Request $request) {
-         
-    $authid = Session::get('Auth_id');
-    $roles = DB::table('admins')->where('id',$authid)->value('role_id');
-    $role_id2 = DB::table('admins')->where('role_id',2)->get();
-    $query = DB::table('admins');
-    $searchstokist = DB::table('admins');
-    
-    $stockist_id = $request->stockist_id;
-    $sub_stockist_id = $request->sub_stockist_id;
-    $user_id = $request->user_id;
-   
-    if ($roles == 2) {
-     $query->where('inside_stockist', $authid)->get();
-    } elseif ($roles == 3) {
-        $query->where('inside_substockist', $authid)->get();
-    } elseif($roles == 1){
-        
-        if($stockist_id){
-            
-             $query->where('inside_stockist', $stockist_id)->get();
-            // $searchstokist->where('inside_stockist',$stockist_id)->where('role_id',3)->get();
-             
-             if($sub_stockist_id){
-                
-                 $query->where('inside_substockist', $sub_stockist_id)->get();
-             }
-             if($user_id)
-             {
-                  $query->where('id', $user_id)->get();
-             }
-        }
-           else{
-               $query->get();
-           }
-      }
-      //dd($searchstokist);
-      $admins = $query->paginate();
-     return view('admin.stokist')
-   ->with('admins', $admins)
-   ->with('roles', $roles)
-   ->with('role_id2', $role_id2)
-   ->with('authid', $authid)
-   ->with('stockist_id', $request->stockist_id)
-   ->with('sub_stockist_id', $request->sub_stockist_id)
-   ->with('user_id', $request->user_id);
-
+  
+  
+  public function stokistlist(Request $request) {
+    $authid = Session::get('Auth_id');  
+    $role_id = Session::get('role_id');  
+   $admins = DB::table('admins');
+   $admins = DB::table('admins');
+   if ($role_id == 2){
+       $admins = $admins->where('inside_stockist', $authid);
+   }
+   $admins = $admins->get();
+    return view('admin.stokist')
+        ->with('admins', $admins)
+        ->with('authid', $authid)
+        ->with('roles', $role_id);
 }
+
+public function getSubstockists($stockistId)
+{
+    $substockists = DB::table('admins')
+                      ->where('inside_stockist', $stockistId)
+                      ->where('role_id', 3) // Role ID for Substockist
+                      ->get(['id', 'terminal_id']); // Select ID and terminal_id
+    return response()->json($substockists);
+}
+
+public function getUsers($substockistId)
+{
+    $users = DB::table('admins')
+               ->where('inside_substockist', $substockistId)
+               ->where('role_id', 4) // Role ID for Users
+               ->get(['id', 'terminal_id', 'role_id', 'password', 'wallet', 'day_wallet', 'today_add_money', 'created_at', 'status']); // Select required fields
+
+    return response()->json($users);
+}
+
+// AdminController.php
+public function getUserByTerminal($terminalId)
+{
+    $user = Admin::where('terminal_id', $terminalId)->first(); // Find user by terminal_id
+
+    if ($user) {
+        return response()->json($user); // Return user data as JSON
+    } else {
+        return response()->json(null); // Return null if user not found
+    }
+}
+
+
+public function getTableData(Request $request)
+{
+    $query = DB::table('admins');
+
+    if ($request->stockist_id) {
+        $query->where('inside_stockist', $request->stockist_id);
+    }
+
+    if ($request->substockist_id) {
+        $query->where('inside_substockist', $request->substockist_id);
+    }
+
+    $data = $query->get(['id', 'role_id', 'terminal_id', 'password', 'wallet', 'day_wallet', 'today_add_money', 'created_at', 'status']);
+
+    return response()->json($data);
+}
+
+
 
 public function updateStatus(Request $request, $id)
 {

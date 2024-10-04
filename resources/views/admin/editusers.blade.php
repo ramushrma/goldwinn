@@ -1,5 +1,4 @@
 @extends('admin.body.adminmaster')
-
 @section('content')
 @if(session()->has('message'))
     <div class="alert alert-success">
@@ -9,14 +8,13 @@
 <div class="full_container mt-4">  
     <div class="card p-4">
         <div class="text-center">
-           
             <h3 class="text-primary mt-4">Edit Role</h3>
         </div>
         <div class="row mt-4">
             <div class="col-sm-6">
                     <form action="{{ route('admins.userupdate', $roleToEdit->id) }}" method="POST">
                           @csrf
-                        @method('PUT')
+                          @method('PUT')
                     <div class="form-group">
                         <label for="name">KeyName</label>
                         <input type="text" class="form-control" id="terminal_id" name="terminal_id" value="{{ old('terminal_id', $roleToEdit->terminal_id) }}" required>
@@ -24,7 +22,6 @@
                     @if($errors->has('terminal_id'))
                         <div class="error text-danger">{{ $errors->first('terminal_id') }}</div>
                     @endif
-
                     <label for="role">Role Select</label>
                     <select class="form-control" name="role_id" id="role_id">
                         <option selected value="">Choose...</option>
@@ -43,7 +40,6 @@
                         <div class="error text-danger">{{ $errors->first('role_id') }}</div>
                     @endif
                 </div>
-
                 <div class="col-sm-6">
                    <div class="form-group">
                         <label for="password">Password</label>
@@ -60,13 +56,11 @@
                     @if($errors->has('password'))
                         <div class="error text-danger">{{ $errors->first('password') }}</div>
                     @endif
-
                       <div class="form-group">
-                           
                         <label for="under_role">Select Under Role</label>
                         <select class="form-control" name="under_role_terminal_id" id="under_role_terminal_id" value="xyz">
                          <option selected value="">Choose KeyNames</option>
-                            <option value="{{$creator_id->terminal_id}}" {{ old('created_inside', $creator_id->terminal_id) == $creator_id->terminal_id ? 'selected' : '' }}>{{ $creator_id->terminal_id ?? 456123}}</option>
+                            <option value="{{$insideid->terminal_id}}" {{ old('created_inside', $insideid->terminal_id) == $insideid->terminal_id ? 'selected' : '' }}>{{ $insideid->terminal_id ?? admin}}</option>
                             @if($role->role_id == 2) <!-- Stockist -->
                                 <!-- Stockist can see a list of all SubStockists when creating a User -->
                             @endif
@@ -106,7 +100,7 @@ $(document).ready(function() {
 
         if (roleId) {
             if (roleId == 3 && loggedInRoleId == 2) {
-                var roleCreatorId = "{{ $creator_id->terminal_id }}"; 
+                var roleCreatorId = "{{ $insideid->terminal_id }}"; 
                 $('#under_role_terminal_id').append('<option value="' + roleCreatorId + '">' + roleCreatorId + '</option>');
             } else {
                 $.ajax({
